@@ -20,9 +20,12 @@ import java.awt.event.ItemEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import javax.swing.JTextField;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ManagementBuku extends javax.swing.JFrame {
-   DefaultTableModel model;
+   
    Connection conn;
     public ManagementBuku() {
         initComponents();
@@ -39,6 +42,11 @@ private void connection(){
             JOptionPane.showMessageDialog(null, "Koneksi gagal");
         }
    }
+
+
+private List<String> columnOrder = new ArrayList<>();
+private DefaultTableModel model;
+
 private void updateTableColumnOrder(String selectedColumn) {
     String columnName = "";
 
