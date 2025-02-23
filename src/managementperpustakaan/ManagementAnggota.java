@@ -72,6 +72,11 @@ public class ManagementAnggota extends javax.swing.JFrame {
         btn_edit.setText("Edit");
 
         btn_tambah.setText("Tambah +");
+        btn_tambah.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_tambahActionPerformed(evt);
+            }
+        });
 
         btn_hapus.setText("Hapus");
 
@@ -242,6 +247,18 @@ public class ManagementAnggota extends javax.swing.JFrame {
     private void input_searchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_input_searchActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_input_searchActionPerformed
+
+    private void btn_tambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_tambahActionPerformed
+       TambahAnggota formBuku = new TambahAnggota();
+       formBuku.addWindowListener(new java.awt.event.WindowAdapter() {
+           @Override
+           public void windowClosed(java.awt.event.WindowEvent e) {
+               // Refresh tabel saat form input ditutup
+               tampil_anggota();
+           }
+       });
+       formBuku.setVisible(true);
+    }//GEN-LAST:event_btn_tambahActionPerformed
 
     /**
      * @param args the command line arguments
