@@ -26,189 +26,174 @@ import java.util.Arrays;
 
 public class ManagementBuku extends javax.swing.JFrame {
    
-   Connection conn;
-    public ManagementBuku() {
+   // Koneksi database
+   private Connection conn;
+   private DefaultTableModel model;
+   private List<String> columnOrder = new ArrayList<>();
+   
+   public ManagementBuku() {
         initComponents();
         connection();
         tampil_buku();
-      
-    }
-private void connection(){
-   try{
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/perpus?zeroDateTimeBehavior=CONVERT_TO_NULL","root","");
-            JOptionPane.showMessageDialog(null, "koneksi berhasil");
-        }catch(Exception e) {
-            JOptionPane.showMessageDialog(null, "Koneksi gagal");
-        }
    }
 
+   // Metode untuk membuat koneksi ke database
+   private void connection() {
+       try {
+           Class.forName("com.mysql.cj.jdbc.Driver");
+           conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/perpus", "root", "");
+           JOptionPane.showMessageDialog(null, "koneksi berhasil");
+       } catch(Exception e) {
+           JOptionPane.showMessageDialog(null, "Koneksi gagal: " + e.getMessage());
+       }
+   }
 
-private List<String> columnOrder = new ArrayList<>();
-private DefaultTableModel model;
+   // Kelas untuk mengelola koneksi database
+   private static class DatabaseConnection {
+       private static final String URL = "jdbc:mysql://localhost:3306/perpus";
+       private static final String USER = "root";
+       private static final String PASSWORD = "";
 
-private void updateTableColumnOrder(String selectedColumn) {
-    String columnName = "";
+       public static Connection getConnection() throws SQLException {
+           return DriverManager.getConnection(URL, USER, PASSWORD);
+       }
+   }
 
-    switch (selectedColumn) {
-        case "id_buku":
-            columnName = "id_buku";
-            break;
-        case "kode_buku":
-            columnName = "kode_buku";
-            break;
-        case "judul":
-            columnName = "judul";
-            break;
-        case "penulis":
-            columnName = "penulis";
-            break;
-        case "penerbit":
-            columnName = "penerbit";
-            break;
-    }
+   // Metode untuk memperbarui urutan kolom tabel
+   private void updateTableColumnOrder(String selectedColumn) {
+       DefaultTableModel model = new DefaultTableModel();
+       
+       // Mendefinisikan semua kolom yang akan ditampilkan
+       String[] columns = {
+           "id_buku", 
+           "kode_buku", 
+           "judul", 
+           "penulis", 
+           "penerbit", 
+           "tahun_terbit", 
+           "kategori", 
+           "stok",
+           "created_at",
+           "updated_at",
+           "deleted_at"
+       };
+       
+       // Menambahkan semua kolom ke model
+       for (String column : columns) {
+           model.addColumn(column);
+       }
 
-    DefaultTableModel model = new DefaultTableModel();
-    
-    // Add the selected column first
-    model.addColumn(columnName);
-    model.addColumn("id_buku");
-    model.addColumn("kode_buku");
-    model.addColumn("judul");
-    model.addColumn("penulis");
-    model.addColumn("penerbit");
-
-    try {
-        String sql = "SELECT id_buku, kode_buku, judul, penulis, penerbit FROM buku";
-        PreparedStatement pre = conn.prepareStatement(sql);
-        ResultSet rs = pre.executeQuery();
-
-        while (rs.next()) {
-            model.addRow(new Object[]{
-                rs.getString(columnName),  // This is the selected column
-                rs.getString("id_buku"),
-                rs.getString("kode_buku"),
-                rs.getString("judul"),
-                rs.getString("penulis"),
-                rs.getString("penerbit")
-            });
-        }
-
-        table_data.setModel(model);
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-}
-
-
-
-private void refreshTable(String columnName) {
-    String sql = "SELECT " + columnName + ", kode_buku, judul, penulis, penerbit FROM buku";
-    DefaultTableModel model = new DefaultTableModel();
-    
-    model.addColumn(columnName);
-    model.addColumn("kode_buku");
-    model.addColumn("judul");
-    model.addColumn("penulis");
-    model.addColumn("penerbit");
-
-    try {
-        PreparedStatement pre = conn.prepareStatement(sql);
-        ResultSet rs = pre.executeQuery();
-
-        while (rs.next()) {
-            model.addRow(new Object[]{
-                rs.getString(columnName),
-                rs.getString("kode_buku"),
-                rs.getString("judul"),
-                rs.getString("penulis"),
-                rs.getString("penerbit")
-            });
-        }
-
-        table_data.setModel(model);
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-}
-
-public class DatabaseConnection {
-    private static final String URL = "jdbc:mysql://localhost:3306/perpus";
-    private static final String USER = "root";
-    private static final String PASSWORD = "";
-
-    public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
-    }
-}
-
-private void cariDataBuku(String kolom, String keyword) {
-    DefaultTableModel model = (DefaultTableModel) table_data.getModel();
-    model.setRowCount(0);
-
-    String sql = "SELECT * FROM buku WHERE " + kolom + " LIKE ?";
-
-    try (Connection conn = DatabaseConnection.getConnection();
-         PreparedStatement pst = conn.prepareStatement(sql)) {
-        pst.setString(1, "%" + keyword + "%");
-        ResultSet rs = pst.executeQuery();
-
-        while (rs.next()) {
-            Object[] row = {
-                rs.getString("id_buku"),
-                rs.getString("kode_buku"),
-                rs.getString("judul"),
-                rs.getString("penulis"),
-                rs.getString("penerbit")
-            };
-            model.addRow(row);
-        }
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-}
-
-
-
-
-
-
-private void tampil_buku(){
-        model = new DefaultTableModel();
-        model.addColumn("Id Buku");
-        model.addColumn("Kode Buku");
-        model.addColumn("Judul");
-        model.addColumn("Penulis");
-        model.addColumn("Penerbit");
-        model.addColumn("Tahun Penerbit");
-        model.addColumn("Kategori");
-        model.addColumn("Stok");
-        
-        try {
-            PreparedStatement pre = conn.prepareStatement("select*from buku");
-            ResultSet res = pre.executeQuery();
-            
-            while(res.next()){
-                model.addRow(new Object[]{
-                    res.getString(1),
-                    res.getString(2),
-                    res.getString(3),
-                    res.getString(4),
-                    res.getString(5),
-                    res.getString(6),
-                    res.getString(7),
-                    res.getString(8)
-                });
+       try {
+           String sql = "SELECT * FROM buku WHERE deleted_at IS NULL";
+           try (PreparedStatement pre = conn.prepareStatement(sql);
+                ResultSet rs = pre.executeQuery()) {
+               
+               while (rs.next()) {
+                   Object[] row = new Object[columns.length];
+                   for (int i = 0; i < columns.length; i++) {
+                       row[i] = rs.getString(columns[i]);
+                   }
+                   model.addRow(row);
                }
-              table_data.setModel(model);
-        } catch (Exception e) {
-        }
-    }
+           }
+           table_data.setModel(model);
+       } catch (SQLException e) {
+           JOptionPane.showMessageDialog(null, "Error mengupdate tabel: " + e.getMessage());
+       }
+   }
 
+   // Metode untuk mencari data buku
+   private void cariDataBuku(String kolom, String keyword) {
+       DefaultTableModel model = new DefaultTableModel();
+       
+       // Mendefinisikan semua kolom yang akan ditampilkan
+       String[] columns = {
+           "id_buku", 
+           "kode_buku", 
+           "judul", 
+           "penulis", 
+           "penerbit", 
+           "tahun_terbit", 
+           "kategori", 
+           "stok",
+           "created_at",
+           "updated_at",
+           "deleted_at"
+       };
+       
+       // Menambahkan kolom ke model
+       for (String column : columns) {
+           model.addColumn(column);
+       }
 
+       // Menambahkan kondisi untuk hanya menampilkan data yang belum dihapus
+       String sql = "SELECT * FROM buku WHERE " + kolom + " LIKE ? AND deleted_at IS NULL";
+       
+       try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement pst = conn.prepareStatement(sql)) {
+           
+           pst.setString(1, "%" + keyword + "%");
+           
+           try (ResultSet rs = pst.executeQuery()) {
+               while (rs.next()) {
+                   Object[] row = new Object[columns.length];
+                   for (int i = 0; i < columns.length; i++) {
+                       row[i] = rs.getString(columns[i]);
+                   }
+                   model.addRow(row);
+               }
+           }
+           table_data.setModel(model);
+       } catch (SQLException e) {
+           JOptionPane.showMessageDialog(null, "Error mencari data: " + e.getMessage());
+       }
+   }
 
+   // Metode untuk menampilkan semua data buku
+   private void tampil_buku() {
+       model = new DefaultTableModel();
+       
+       // Mendefinisikan semua kolom yang akan ditampilkan
+       String[] columns = {
+           "id_buku", 
+           "kode_buku", 
+           "judul", 
+           "penulis", 
+           "penerbit", 
+           "tahun_terbit", 
+           "kategori", 
+           "stok",
+           "created_at",
+           "updated_at",
+           "deleted_at"
+       };
+       
+       // Menambahkan kolom ke model
+       for (String column : columns) {
+           model.addColumn(column);
+       }
+       
+       try {
+           // Hanya menampilkan data yang belum dihapus
+           String sql = "SELECT * FROM buku WHERE deleted_at IS NULL ORDER BY created_at DESC";
+           try (PreparedStatement pre = conn.prepareStatement(sql);
+                ResultSet res = pre.executeQuery()) {
+               
+               while (res.next()) {
+                   Object[] row = new Object[columns.length];
+                   for (int i = 0; i < columns.length; i++) {
+                       row[i] = res.getString(columns[i]);
+                   }
+                   model.addRow(row);
+               }
+               table_data.setModel(model);
+           }
+       } catch (SQLException e) {
+           JOptionPane.showMessageDialog(null, "Error menampilkan data: " + e.getMessage());
+       }
+   }
 
-    @SuppressWarnings("unchecked")
+   @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -265,6 +250,11 @@ private void tampil_buku(){
         btn_edit.setText("Edit");
 
         btn_tambah.setText("Tambah +");
+        btn_tambah.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_tambahActionPerformed(evt);
+            }
+        });
 
         btn_hapus.setText("Hapus");
 
@@ -403,109 +393,163 @@ private void tampil_buku(){
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void cetakActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cetakActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cetakActionPerformed
+   private void cetakActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cetakActionPerformed
+       // TODO add your handling code here:
+   }//GEN-LAST:event_cetakActionPerformed
 
-    private void input_searchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_input_searchKeyReleased
-                                         
-    String keyword = input_search.getText().trim();
-    String selectedColumn = searchBy.getSelectedItem().toString().trim();
-    
-    System.out.println("Keyword: '" + keyword + "'");
-    System.out.println("Selected Column: '" + selectedColumn + "'");
-    
-    cariDataBuku(selectedColumn, keyword);
+   private void input_searchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_input_searchKeyReleased
+       String keyword = input_search.getText().trim();
+       if (keyword.isEmpty()) {
+           tampil_buku();
+       } else {
+           cariBuku(keyword);
+       }
+   }//GEN-LAST:event_input_searchKeyReleased
 
+   private void jMenu1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu1MouseClicked
+       // TODO add your handling code here:
+       new Dashboard().setVisible(true);
+   }//GEN-LAST:event_jMenu1MouseClicked
 
-    }//GEN-LAST:event_input_searchKeyReleased
+   private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+       // TODO add your handling code here:
+       new Pinjaman().setVisible(true);
+   }//GEN-LAST:event_jMenuItem1ActionPerformed
 
-    private void jMenu1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu1MouseClicked
-        // TODO add your handling code here:
-          new Dashboard().setVisible(true);
-    }//GEN-LAST:event_jMenu1MouseClicked
+   private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+       // TODO add your handling code here:
+       new Pengembalian().setVisible(true);
+   }//GEN-LAST:event_jMenuItem2ActionPerformed
 
-    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        // TODO add your handling code here:
-          new Pinjaman().setVisible(true);
-    }//GEN-LAST:event_jMenuItem1ActionPerformed
+   private void jMenu2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu2MouseClicked
+       // TODO add your handling code here:
+       new ManagementBuku().setVisible(true);
+   }//GEN-LAST:event_jMenu2MouseClicked
 
-    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-        // TODO add your handling code here:
-          new Pengembalian().setVisible(true);
-    }//GEN-LAST:event_jMenuItem2ActionPerformed
+   private void jMenu3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu3MouseClicked
+       // TODO add your handling code here:
+       new ManagementAnggota().setVisible(true);
+   }//GEN-LAST:event_jMenu3MouseClicked
 
-    private void jMenu2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu2MouseClicked
-        // TODO add your handling code here:
-          new ManagementBuku().setVisible(true);
-    }//GEN-LAST:event_jMenu2MouseClicked
+   private void searchByActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchByActionPerformed
+       // TODO add your handling code here:
+   }//GEN-LAST:event_searchByActionPerformed
 
-    private void jMenu3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenu3MouseClicked
-        // TODO add your handling code here:
-          new ManagementAnggota().setVisible(true);
-    }//GEN-LAST:event_jMenu3MouseClicked
+   private void searchByItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_searchByItemStateChanged
+       if (evt.getStateChange() == ItemEvent.SELECTED) {
+           String selectedColumn = searchBy.getSelectedItem().toString().trim();
+           System.out.println("Selected column: '" + selectedColumn + "'");
+           updateTableColumnOrder(selectedColumn);
+       }
+   }//GEN-LAST:event_searchByItemStateChanged
 
-    private void searchByActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchByActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_searchByActionPerformed
+   private void input_searchFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_input_searchFocusGained
+       
+   }//GEN-LAST:event_input_searchFocusGained
 
-    private void searchByItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_searchByItemStateChanged
-        if (evt.getStateChange() == ItemEvent.SELECTED) {
-        String selectedColumn = searchBy.getSelectedItem().toString().trim();
-        System.out.println("Selected column: '" + selectedColumn + "'");
-        updateTableColumnOrder(selectedColumn);
-    }
-    }//GEN-LAST:event_searchByItemStateChanged
+   private void input_searchFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_input_searchFocusLost
+       
+   }//GEN-LAST:event_input_searchFocusLost
 
-    private void input_searchFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_input_searchFocusGained
-        
-    }//GEN-LAST:event_input_searchFocusGained
+    private void btn_tambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_tambahActionPerformed
+       TambahBuku formBuku = new TambahBuku();
+       formBuku.addWindowListener(new java.awt.event.WindowAdapter() {
+           @Override
+           public void windowClosed(java.awt.event.WindowEvent e) {
+               // Refresh tabel saat form input ditutup
+               tampil_buku();
+           }
+       });
+       formBuku.setVisible(true);
+    }//GEN-LAST:event_btn_tambahActionPerformed
 
-    private void input_searchFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_input_searchFocusLost
-         
-    }//GEN-LAST:event_input_searchFocusLost
+   private void cariBuku(String keyword) {
+       model = new DefaultTableModel();
+       
+       String[] columns = {
+           "id_buku", 
+           "kode_buku", 
+           "judul", 
+           "penulis", 
+           "penerbit", 
+           "tahun_terbit", 
+           "kategori", 
+           "stok",
+           "created_at",
+           "updated_at",
+           "deleted_at"
+       };
+       
+       for (String column : columns) {
+           model.addColumn(column);
+       }
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ManagementBuku.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ManagementBuku.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ManagementBuku.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ManagementBuku.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
+       try {
+           String sql = "SELECT * FROM buku WHERE deleted_at IS NULL AND " +
+                       "(kode_buku LIKE ? OR judul LIKE ? OR penulis LIKE ? OR kategori LIKE ?)";
+           PreparedStatement pre = conn.prepareStatement(sql);
+           String searchPattern = "%" + keyword + "%";
+           pre.setString(1, searchPattern);
+           pre.setString(2, searchPattern);
+           pre.setString(3, searchPattern);
+           pre.setString(4, searchPattern);
+           
+           ResultSet res = pre.executeQuery();
+           while (res.next()) {
+               Object[] row = new Object[columns.length];
+               for (int i = 0; i < columns.length; i++) {
+                   row[i] = res.getString(columns[i]);
+               }
+               model.addRow(row);
+           }
+           table_data.setModel(model);
+           
+       } catch (SQLException e) {
+           JOptionPane.showMessageDialog(null, "Error mencari data: " + e.getMessage());
+       }
+   }
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ManagementBuku().setVisible(true);
-            }
-        });
-    }
+   /**
+    * @param args the command line arguments
+    */
+   public static void main(String args[]) {
+       /* Set the Nimbus look and feel */
+       //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+       /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+        * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+        */
+       try {
+           for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+               if ("Nimbus".equals(info.getName())) {
+                   javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                   break;
+               }
+           }
+       } catch (ClassNotFoundException ex) {
+           java.util.logging.Logger.getLogger(ManagementBuku.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+       } catch (InstantiationException ex) {
+           java.util.logging.Logger.getLogger(ManagementBuku.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+       } catch (IllegalAccessException ex) {
+           java.util.logging.Logger.getLogger(ManagementBuku.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+       } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+           java.util.logging.Logger.getLogger(ManagementBuku.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+       }
+       //</editor-fold>
+       //</editor-fold>
+       //</editor-fold>
+       //</editor-fold>
+       //</editor-fold>
+       //</editor-fold>
+       //</editor-fold>
+       //</editor-fold>
+
+       /* Create and display the form */
+       java.awt.EventQueue.invokeLater(new Runnable() {
+           public void run() {
+               new ManagementBuku().setVisible(true);
+           }
+       });
+   }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_edit;

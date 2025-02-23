@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
+import java.awt.BorderLayout;
 
 /**
  *
@@ -17,10 +18,6 @@ import javax.swing.JOptionPane;
  */
 public class halaman extends javax.swing.JFrame {
 
-    /**
-     * Creates new form halaman
-     */
-  
 
     Connection conn;
     public halaman() {
@@ -36,7 +33,7 @@ public class halaman extends javax.swing.JFrame {
     private void connection(){
    try{
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/perpus?zeroDateTimeBehavior=CONVERT_TO_NULL","root","");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/perpus","root","");
             JOptionPane.showMessageDialog(null, "koneksi berhasil");
         }catch(Exception e) {
             JOptionPane.showMessageDialog(null, "Koneksi gagal");
@@ -158,7 +155,7 @@ try {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        jPanel1.setLayout(new java.awt.BorderLayout());
 
         jPanel2.setBackground(new java.awt.Color(206, 242, 230));
 
@@ -301,7 +298,7 @@ try {
                 .addContainerGap(388, Short.MAX_VALUE))
         );
 
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 750, 580));
+        jPanel1.add(jPanel2, BorderLayout.CENTER);
 
         jMenu1.setText("Dashboard");
         jMenuBar1.add(jMenu1);

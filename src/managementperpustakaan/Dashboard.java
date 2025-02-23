@@ -27,7 +27,7 @@ public class Dashboard extends javax.swing.JFrame {
     private void connection(){
    try{
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/perpus?zeroDateTimeBehavior=CONVERT_TO_NULL","root","");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/perpus","root","");
             JOptionPane.showMessageDialog(null, "koneksi berhasil");
         }catch(Exception e) {
             JOptionPane.showMessageDialog(null, "Koneksi gagal");

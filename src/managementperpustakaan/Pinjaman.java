@@ -83,15 +83,11 @@ public class Pinjaman extends javax.swing.JFrame {
             + "peminjaman.tanggal_pinjam, peminjaman.tanggal_kembali, peminjaman.status "
             + "FROM peminjaman "
             + "JOIN anggota ON peminjaman.id_anggota = anggota.id_anggota "
-            + "JOIN buku ON peminjaman.id_buku = buku.id_buku";
+            + "JOIN buku ON peminjaman.id_buku = buku.id_buku "
+            + "ORDER BY peminjaman.id_peminjaman DESC";
 
-    DefaultTableModel model = new DefaultTableModel();
-    model.addColumn("ID Peminjaman");
-    model.addColumn("Nama Anggota");
-    model.addColumn("Judul Buku");
-    model.addColumn("Tanggal Pinjam");
-    model.addColumn("Tanggal Kembali");
-    model.addColumn("Status");
+    DefaultTableModel model = (DefaultTableModel) table_data.getModel();
+    model.setRowCount(0);
 
     try {
         PreparedStatement pre = conn.prepareStatement(sql);
@@ -107,8 +103,6 @@ public class Pinjaman extends javax.swing.JFrame {
                 rs.getString("status")
             });
         }
-
-        table_data.setModel(model);
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(null, "Terjadi kesalahan saat mengambil data!", "Error", JOptionPane.ERROR_MESSAGE);
         e.printStackTrace();
@@ -442,91 +436,101 @@ private void loadBukuComboBox() {
    
     }//GEN-LAST:event_txt_tglKembaliKeyReleased
 
-    private void btn_pinjamActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_pinjamActionPerformed
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    private void btn_pinjamActionPerformed(java.awt.event.ActionEvent evt) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String pinjamStr = txt_tglPinjam.getText();
+            String kembaliStr = txt_tglKembali.getText();
+            String namaAnggota = (String) cmb_anggota.getSelectedItem();
+            String judulBuku = (String) cmb_buku.getSelectedItem();
 
-try {
-    String pinjamStr = txt_tglPinjam.getText().trim();
-    String kembaliStr = txt_tglKembali.getText().trim();
-    String namaAnggota = (String) cmb_anggota.getSelectedItem();
-    String judulBuku = (String) cmb_buku.getSelectedItem();
+            if (pinjamStr.isEmpty() || kembaliStr.isEmpty() || "-- Pilih Anggota --".equals(namaAnggota) || "-- Pilih Buku --".equals(judulBuku)) {
+                JOptionPane.showMessageDialog(null, "Harap isi semua data!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-    if (pinjamStr.isEmpty() || kembaliStr.isEmpty() || "-- Pilih Anggota --".equals(namaAnggota) || "-- Pilih Buku --".equals(judulBuku)) {
-        JOptionPane.showMessageDialog(null, "Harap isi semua data!", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
+            Date tglPinjam = sdf.parse(pinjamStr);
+            Date tglKembali = sdf.parse(kembaliStr);
 
-    Date tglPinjam = sdf.parse(pinjamStr);
-    Date tglKembali = sdf.parse(kembaliStr);
+            if (tglKembali.before(tglPinjam)) {
+                JOptionPane.showMessageDialog(null, "Tanggal kembali tidak boleh lebih awal dari tanggal pinjam!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-    if (tglKembali.before(tglPinjam)) {
-        JOptionPane.showMessageDialog(null, "Tanggal kembali tidak boleh lebih awal dari tanggal pinjam!", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-
-    long selisihHari = ChronoUnit.DAYS.between(tglPinjam.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), 
+            long selisihHari = ChronoUnit.DAYS.between(tglPinjam.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(), 
                                            tglKembali.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
+            if (selisihHari > 14) {
+                JOptionPane.showMessageDialog(null, "Peminjaman tidak boleh lebih dari 14 hari!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-   if (selisihHari > 14) {
-    JOptionPane.showMessageDialog(null, "Peminjaman tidak boleh lebih dari 14 hari!", "Error", JOptionPane.ERROR_MESSAGE);
-    return; // Hentikan proses jika lebih dari 14 hari
-}
+            String idAnggota = null, idBuku = null;
 
+            String sqlAnggota = "SELECT id_anggota FROM anggota WHERE nama = ?";
+            PreparedStatement preAnggota = conn.prepareStatement(sqlAnggota);
+            preAnggota.setString(1, namaAnggota);
+            ResultSet rsAnggota = preAnggota.executeQuery();
+            if (rsAnggota.next()) {
+                idAnggota = rsAnggota.getString("id_anggota");
+            }
 
-    String idAnggota = null, idBuku = null;
+            String sqlBuku = "SELECT id_buku FROM buku WHERE judul = ?";
+            PreparedStatement preBuku = conn.prepareStatement(sqlBuku);
+            preBuku.setString(1, judulBuku);
+            ResultSet rsBuku = preBuku.executeQuery();
+            if (rsBuku.next()) {
+                idBuku = rsBuku.getString("id_buku");
+            }
 
-    String sqlAnggota = "SELECT id_anggota FROM anggota WHERE nama = ?";
-    PreparedStatement preAnggota = conn.prepareStatement(sqlAnggota);
-    preAnggota.setString(1, namaAnggota);
-    ResultSet rsAnggota = preAnggota.executeQuery();
-    if (rsAnggota.next()) {
-        idAnggota = rsAnggota.getString("id_anggota");
+            if (idAnggota == null || idBuku == null) {
+                JOptionPane.showMessageDialog(null, "Data anggota atau buku tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String sqlInsert = "INSERT INTO peminjaman (id_anggota, id_buku, tanggal_pinjam, tanggal_kembali, status) " +
+                               "VALUES (?, ?, ?, ?, 'Dipinjam')";
+            PreparedStatement pre = conn.prepareStatement(sqlInsert);
+            pre.setString(1, idAnggota);
+            pre.setString(2, idBuku);
+            pre.setString(3, pinjamStr);
+            pre.setString(4, kembaliStr);
+
+            int rowInserted = pre.executeUpdate();
+            if (rowInserted > 0) {
+                JOptionPane.showMessageDialog(null, "Peminjaman berhasil ditambahkan!");
+                resetForm();
+                refreshData();
+            } else {
+                JOptionPane.showMessageDialog(null, "Peminjaman gagal ditambahkan!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (ParseException e) {
+            JOptionPane.showMessageDialog(null, "Format tanggal salah! Gunakan format yyyy-MM-dd", "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Terjadi kesalahan database!", "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
 
-    String sqlBuku = "SELECT id_buku FROM buku WHERE judul = ?";
-    PreparedStatement preBuku = conn.prepareStatement(sqlBuku);
-    preBuku.setString(1, judulBuku);
-    ResultSet rsBuku = preBuku.executeQuery();
-    if (rsBuku.next()) {
-        idBuku = rsBuku.getString("id_buku");
+    private void resetForm() {
+        txt_tglPinjam.setText("");
+        txt_tglKembali.setText("");
+        cmb_anggota.setSelectedIndex(0);
+        cmb_buku.setSelectedIndex(0);
+        input_search.setText("");
     }
 
-    if (idAnggota == null || idBuku == null) {
-        JOptionPane.showMessageDialog(null, "Data anggota atau buku tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
+    private void refreshData() {
+        loadAnggotaComboBox();
+        loadBukuComboBox();
+        tampilDataPeminjaman();
     }
 
-    String sqlInsert = "INSERT INTO peminjaman (id_anggota, id_buku, tanggal_pinjam, tanggal_kembali, status) " +
-                       "VALUES (?, ?, ?, ?, 'Dipinjam')";
-    PreparedStatement pre = conn.prepareStatement(sqlInsert);
-    pre.setString(1, idAnggota);
-    pre.setString(2, idBuku);
-    pre.setString(3, pinjamStr);
-    pre.setString(4, kembaliStr);
-
-    int rowInserted = pre.executeUpdate();
-   if (rowInserted > 0) {
-    JOptionPane.showMessageDialog(null, "Peminjaman berhasil ditambahkan!");
-    tampilDataPeminjaman(); // Panggil kembali metode untuk menampilkan data terbaru
-}
- else {
-        JOptionPane.showMessageDialog(null, "Peminjaman gagal ditambahkan!", "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-} catch (ParseException e) {
-    JOptionPane.showMessageDialog(null, "Format tanggal salah! Gunakan format yyyy-MM-dd", "Error", JOptionPane.ERROR_MESSAGE);
-} catch (SQLException e) {
-    JOptionPane.showMessageDialog(null, "Terjadi kesalahan database!", "Error", JOptionPane.ERROR_MESSAGE);
-    e.printStackTrace();
-}
-
-    }//GEN-LAST:event_btn_pinjamActionPerformed
-
-    private void input_searchKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_input_searchKeyReleased
+    private void input_searchKeyReleased(java.awt.event.KeyEvent evt) {
          String keyword = input_search.getText().trim();
         cariDataPeminjaman(keyword);
-    }//GEN-LAST:event_input_searchKeyReleased
+    }
 
     /**
      * @param args the command line arguments
