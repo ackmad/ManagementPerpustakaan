@@ -34,12 +34,17 @@ Connection conn;
             JOptionPane.showMessageDialog(null, "Koneksi gagal");
         }
    }
-   private void tampilDataPengembalian() {
-    String sql = "SELECT id_pengembalian, id_peminjaman, tanggal_kembali_aktual, denda, status_denda, created_at, updated_at, deleted_at FROM pengembalian";
+  private void tampilDataPengembalian() {
+    String sql = "SELECT p.id_pengembalian, p.id_peminjaman, a.nama, p.tanggal_kembali_aktual, " +
+                 "p.denda, p.status_denda, p.created_at, p.updated_at, p.deleted_at " +
+                 "FROM pengembalian p " +
+                 "JOIN peminjaman pm ON p.id_peminjaman = pm.id_peminjaman " +
+                 "JOIN anggota a ON pm.id_anggota = a.id_anggota";
 
     DefaultTableModel model = new DefaultTableModel();
     model.addColumn("ID Pengembalian");
     model.addColumn("ID Peminjaman");
+    model.addColumn("Nama Anggota");
     model.addColumn("Tanggal Kembali Aktual");
     model.addColumn("Denda");
     model.addColumn("Status Denda");
@@ -55,6 +60,7 @@ Connection conn;
             model.addRow(new Object[]{
                 rs.getString("id_pengembalian"),
                 rs.getString("id_peminjaman"),
+                rs.getString("nama"),
                 rs.getString("tanggal_kembali_aktual"),
                 rs.getString("denda"),
                 rs.getString("status_denda"),
@@ -71,6 +77,7 @@ Connection conn;
     }
 }
 
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -82,6 +89,7 @@ Connection conn;
         jLabel5 = new javax.swing.JLabel();
         txt_idpengembalian = new javax.swing.JTextField();
         btn_bukuDikembalikan = new javax.swing.JButton();
+        btn_edit = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -120,6 +128,13 @@ Connection conn;
             }
         });
 
+        btn_edit.setText("Edit");
+        btn_edit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_editActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -127,15 +142,17 @@ Connection conn;
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 584, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel5)
                             .addGroup(jPanel2Layout.createSequentialGroup()
                                 .addComponent(txt_idpengembalian, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btn_bukuDikembalikan, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 199, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 584, Short.MAX_VALUE))
+                                .addComponent(btn_bukuDikembalikan, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(btn_edit, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -146,7 +163,8 @@ Connection conn;
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txt_idpengembalian, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btn_bukuDikembalikan, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btn_bukuDikembalikan, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btn_edit, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(12, 12, 12)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 404, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -294,6 +312,10 @@ Connection conn;
     }     
     }//GEN-LAST:event_btn_bukuDikembalikanActionPerformed
 
+    private void btn_editActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_editActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btn_editActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -332,6 +354,7 @@ Connection conn;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_bukuDikembalikan;
+    private javax.swing.JButton btn_edit;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
