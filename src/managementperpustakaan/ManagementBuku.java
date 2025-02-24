@@ -24,9 +24,10 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+
 public class ManagementBuku extends javax.swing.JFrame {
    
-   // Koneksi database
+ 
    private Connection conn;
    private DefaultTableModel model;
    private List<String> columnOrder = new ArrayList<>();
@@ -37,7 +38,7 @@ public class ManagementBuku extends javax.swing.JFrame {
         tampil_buku();
    }
 
-   // Metode untuk membuat koneksi ke database
+   
    private void connection() {
        try {
            Class.forName("com.mysql.cj.jdbc.Driver");
@@ -48,7 +49,7 @@ public class ManagementBuku extends javax.swing.JFrame {
        }
    }
 
-   // Kelas untuk mengelola koneksi database
+
    private static class DatabaseConnection {
        private static final String URL = "jdbc:mysql://localhost:3306/perpus";
        private static final String USER = "root";
@@ -59,11 +60,11 @@ public class ManagementBuku extends javax.swing.JFrame {
        }
    }
 
-   // Metode untuk memperbarui urutan kolom tabel
+
    private void updateTableColumnOrder(String selectedColumn) {
        DefaultTableModel model = new DefaultTableModel();
        
-       // Mendefinisikan semua kolom yang akan ditampilkan
+  
        String[] columns = {
            "id_buku", 
            "kode_buku", 
@@ -78,7 +79,7 @@ public class ManagementBuku extends javax.swing.JFrame {
            "deleted_at"
        };
        
-       // Menambahkan semua kolom ke model
+       
        for (String column : columns) {
            model.addColumn(column);
        }
@@ -102,11 +103,11 @@ public class ManagementBuku extends javax.swing.JFrame {
        }
    }
 
-   // Metode untuk mencari data buku
+   
    private void cariDataBuku(String kolom, String keyword) {
        DefaultTableModel model = new DefaultTableModel();
        
-       // Mendefinisikan semua kolom yang akan ditampilkan
+       
        String[] columns = {
            "id_buku", 
            "kode_buku", 
@@ -121,12 +122,12 @@ public class ManagementBuku extends javax.swing.JFrame {
            "deleted_at"
        };
        
-       // Menambahkan kolom ke model
+      
        for (String column : columns) {
            model.addColumn(column);
        }
 
-       // Menambahkan kondisi untuk hanya menampilkan data yang belum dihapus
+    
        String sql = "SELECT * FROM buku WHERE " + kolom + " LIKE ? AND deleted_at IS NULL";
        
        try (Connection conn = DatabaseConnection.getConnection();
@@ -149,11 +150,11 @@ public class ManagementBuku extends javax.swing.JFrame {
        }
    }
 
-   // Metode untuk menampilkan semua data buku
+  
    private void tampil_buku() {
        model = new DefaultTableModel();
        
-       // Mendefinisikan semua kolom yang akan ditampilkan
+    
        String[] columns = {
            "id_buku", 
            "kode_buku", 
@@ -241,6 +242,11 @@ public class ManagementBuku extends javax.swing.JFrame {
                 input_searchFocusLost(evt);
             }
         });
+        input_search.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                input_searchActionPerformed(evt);
+            }
+        });
         input_search.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 input_searchKeyReleased(evt);
@@ -248,6 +254,11 @@ public class ManagementBuku extends javax.swing.JFrame {
         });
 
         btn_edit.setText("Edit");
+        btn_edit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_editActionPerformed(evt);
+            }
+        });
 
         btn_tambah.setText("Tambah +");
         btn_tambah.addActionListener(new java.awt.event.ActionListener() {
@@ -257,6 +268,11 @@ public class ManagementBuku extends javax.swing.JFrame {
         });
 
         btn_hapus.setText("Hapus");
+        btn_hapus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_hapusActionPerformed(evt);
+            }
+        });
 
         cetak.setText("Cetak");
         cetak.addActionListener(new java.awt.event.ActionListener() {
@@ -463,6 +479,53 @@ public class ManagementBuku extends javax.swing.JFrame {
        formBuku.setVisible(true);
     }//GEN-LAST:event_btn_tambahActionPerformed
 
+    private void btn_hapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_hapusActionPerformed
+       int selectedRow = table_data.getSelectedRow();
+       if (selectedRow == -1) {
+           JOptionPane.showMessageDialog(this, "Pilih buku yang ingin dihapus.");
+           return;
+       }
+       
+       int confirm = JOptionPane.showConfirmDialog(this, "Apakah Anda yakin ingin menghapus buku ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+       if (confirm == JOptionPane.YES_OPTION) {
+           String idBuku = table_data.getValueAt(selectedRow, 0).toString();
+           try {
+               String sql = "UPDATE buku SET deleted_at = NOW() WHERE id_buku = ?";
+               PreparedStatement pre = conn.prepareStatement(sql);
+               pre.setString(1, idBuku);
+               pre.executeUpdate();
+               JOptionPane.showMessageDialog(this, "Buku berhasil dihapus.");
+               tampil_buku();
+           } catch (SQLException e) {
+               JOptionPane.showMessageDialog(this, "Error menghapus data: " + e.getMessage());
+           }
+       }
+    }//GEN-LAST:event_btn_hapusActionPerformed
+
+    private void btn_editActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_editActionPerformed
+int selectedRow = table_data.getSelectedRow();
+if (selectedRow == -1) {
+    JOptionPane.showMessageDialog(this, "Pilih buku yang akan diedit!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+    return;
+}
+
+
+String kodeBuku = table_data.getValueAt(selectedRow, 1).toString(); 
+String judul = table_data.getValueAt(selectedRow, 2).toString();
+String penulis = table_data.getValueAt(selectedRow, 3).toString();
+String penerbit = table_data.getValueAt(selectedRow, 4).toString();
+String tahunTerbit = table_data.getValueAt(selectedRow, 5).toString();
+String kategori = table_data.getValueAt(selectedRow, 6).toString();
+int stok = Integer.parseInt(table_data.getValueAt(selectedRow, 7).toString().trim()); 
+
+new UpdateBuku(kodeBuku, judul, penulis, penerbit, tahunTerbit, kategori, stok).setVisible(true);
+
+    }//GEN-LAST:event_btn_editActionPerformed
+
+    private void input_searchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_input_searchActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_input_searchActionPerformed
+
    private void cariBuku(String keyword) {
        model = new DefaultTableModel();
        
@@ -507,6 +570,7 @@ public class ManagementBuku extends javax.swing.JFrame {
        } catch (SQLException e) {
            JOptionPane.showMessageDialog(null, "Error mencari data: " + e.getMessage());
        }
+   
    }
 
    /**
