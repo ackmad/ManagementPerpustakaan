@@ -17,7 +17,7 @@ import javax.swing.table.DefaultTableModel;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 public class Pengembalian extends javax.swing.JFrame {
-
+  
 Connection conn;
     public Pengembalian() {
      initComponents();
@@ -34,8 +34,8 @@ Connection conn;
             JOptionPane.showMessageDialog(null, "Koneksi gagal");
         }
    }
-  private void tampilDataPengembalian() {
-    String sql = "SELECT p.id_pengembalian, p.id_peminjaman, a.nama, p.tanggal_kembali_aktual, " +
+  public void tampilDataPengembalian() {
+    String sql = "SELECT p.id_pengembalian, pm.id_peminjaman, a.nama, p.tanggal_kembali_aktual, " +
                  "p.denda, p.status_denda, p.created_at, p.updated_at, p.deleted_at " +
                  "FROM pengembalian p " +
                  "JOIN peminjaman pm ON p.id_peminjaman = pm.id_peminjaman " +
@@ -76,6 +76,7 @@ Connection conn;
         e.printStackTrace();
     }
 }
+
 
 
     @SuppressWarnings("unchecked")
@@ -313,7 +314,13 @@ Connection conn;
     }//GEN-LAST:event_btn_bukuDikembalikanActionPerformed
 
     private void btn_editActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_editActionPerformed
-        // TODO add your handling code here:
+     int selectedRow = table_data.getSelectedRow();
+    if (selectedRow != -1) {
+        String idPengembalian = table_data.getValueAt(selectedRow, 0).toString();
+        new UpdatePengembalian(idPengembalian, conn, this).setVisible(true);
+    } else {
+        JOptionPane.showMessageDialog(null, "Pilih data terlebih dahulu!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+    }
     }//GEN-LAST:event_btn_editActionPerformed
 
     /**
